@@ -1,1 +1,74 @@
-services: { }
+version: '3.8'
+services:
+  user-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        JAR_FILE: build/libs/*.jar
+    image: budgetmanagement-user-service
+    restart: "no"
+    ports:
+      - "8081:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=user
+      - SERVER_PORT=8080
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://user-db:5432/userdb
+      - SPRING_DATASOURCE_USERNAME=user
+      - SPRING_DATASOURCE_PASSWORD=userpass
+    depends_on:
+      - user-db
+    networks:
+      - budgetnet
+
+  budget-room:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        JAR_FILE: build/libs/*.jar
+    image: budgetmanagement-budget-room
+    restart: "no"
+    ports:
+      - "8082:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=budget
+      - SERVER_PORT=8080
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://budget-db:5432/budgetdb
+      - SPRING_DATASOURCE_USERNAME=budget
+      - SPRING_DATASOURCE_PASSWORD=budgetpass
+    depends_on:
+      - budget-db
+    networks:
+      - budgetnet
+
+  user-db:
+    image: postgres:15
+    restart: "no"
+    environment:
+      - POSTGRES_DB=userdb
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=userpass
+    volumes:
+      - user-db-data:/var/lib/postgresql/data
+    networks:
+      - budgetnet
+
+  budget-db:
+    image: postgres:15
+    restart: "no"
+    environment:
+      - POSTGRES_DB=budgetdb
+      - POSTGRES_USER=budget
+      - POSTGRES_PASSWORD=budgetpass
+    volumes:
+      - budget-db-data:/var/lib/postgresql/data
+    networks:
+      - budgetnet
+
+volumes:
+  user-db-data:
+  budget-db-data:
+
+networks:
+  budgetnet:

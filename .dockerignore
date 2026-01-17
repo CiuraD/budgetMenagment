@@ -1,0 +1,10 @@
+build
+.gradle
+.gradle/
+**/target
+**/node_modules
+.git
+.gitignore
+Dockerfile
+compose.yaml
+.env
