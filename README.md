@@ -47,7 +47,3 @@ Files of interest
 - scripts/build_and_start.sh — builds jar, builds images and runs docker compose up (attached)
 - src/main/java/.../controller — example /hello endpoints
 - src/main/java/.../config/OpenApiConfig.java — generates OpenAPI for controllers in the controller package
-
-If you want
-- I can remove the obsolete top-level version from compose.yaml, change the start script to skip the local bootJar, or add a single aggregated Swagger UI container that merges both services' OpenAPI endpoints.
-
