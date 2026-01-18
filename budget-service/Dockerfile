@@ -1,7 +1,7 @@
 FROM gradle:9.2-jdk21 AS builder
 WORKDIR /home/gradle/project
 COPY --chown=gradle:gradle . .
-RUN --mount=type=cache,target=/home/gradle/.gradle \
+RUN --mount=type=cache,id=budget-service-gradle-cache,target=/home/gradle/.gradle \
     ./gradlew :budget-service:clean :budget-service:bootJar -x test
 
 FROM eclipse-temurin:21-jre-jammy
