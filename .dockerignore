@@ -5,6 +5,5 @@ build
 **/node_modules
 .git
 .gitignore
-Dockerfile
 compose.yaml
 .env

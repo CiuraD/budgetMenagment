@@ -1,4 +1,4 @@
-package com.aghallegro.budgetmenagment.controller;
+package pl.allegro.agh.budgetManagement.user.controller;
 
 import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -1,13 +1,11 @@
-package com.aghallegro.budgetmenagment;
+package pl.allegro.agh.budgetManagement.budget;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class BudgetMenagmentApplication {
-
+public class BudgetServiceApplication {
     public static void main(String[] args) {
-        SpringApplication.run(BudgetMenagmentApplication.class, args);
+        SpringApplication.run(BudgetServiceApplication.class, args);
     }
-
 }

@@ -1,1 +1,5 @@
-rootProject.name = 'budgetMenagment'
+rootProject.name = 'budgetManagement'
+
+include 'user-service'
+include 'budget-service'
+include 'common-lib'
