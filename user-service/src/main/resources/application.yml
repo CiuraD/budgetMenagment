@@ -14,3 +14,7 @@ spring:
 
 server:
   port: 8081
+
+jwt:
+  secret: change-this-secret-to-a-strong-random-value
+  expiration-ms: 86400000 # 1 day

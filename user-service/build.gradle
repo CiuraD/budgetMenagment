@@ -12,6 +12,11 @@ dependencies {
     implementation 'org.flywaydb:flyway-core'
     implementation 'org.projectlombok:lombok:1.18.30'
     implementation project(':common-lib')
+    implementation 'org.springframework.security:spring-security-crypto'
+    // JWT dependencies (api + runtime impl and jackson extension)
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
     developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
     runtimeOnly 'com.h2database:h2'
     runtimeOnly 'org.postgresql:postgresql:42.7.7'
