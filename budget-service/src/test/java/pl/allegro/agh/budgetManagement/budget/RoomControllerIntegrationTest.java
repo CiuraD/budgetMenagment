@@ -1,82 +1,121 @@
 package pl.allegro.agh.budgetManagement.budget;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.http.*;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import pl.allegro.agh.budgetManagement.budget.dto.RoomDto;
 import pl.allegro.agh.budgetManagement.budget.dto.RoomProductDto;
 
 import java.math.BigDecimal;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(
-    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-    properties = {
-        "spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1",
+@SpringBootTest(properties = {
+        "app.security.enabled=false",
+        "spring.datasource.url=jdbc:h2:mem:budgetdb;DB_CLOSE_DELAY=-1",
         "spring.datasource.driver-class-name=org.h2.Driver",
         "spring.datasource.username=sa",
         "spring.datasource.password=",
-        "spring.flyway.enabled=false",
         "spring.jpa.hibernate.ddl-auto=create-drop",
-        "app.security.enabled=false",
-        "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration,org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration"
-    }
-)
+        "spring.jpa.show-sql=false"
+})
 @ActiveProfiles("budget")
 public class RoomControllerIntegrationTest {
 
-    @LocalServerPort
-    private int port;
+    @Autowired
+    WebApplicationContext wac;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    MockMvc mockMvc;
 
-    private String baseUrl() {
-        return "http://localhost:" + port + "/rooms";
+    // use a local ObjectMapper to avoid relying on autoconfiguration in the test context
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @BeforeEach
+    void setup() {
+        this.mockMvc = MockMvcBuilders.webAppContextSetup(wac).build();
     }
 
     @Test
-    void createRoom_and_listRooms() {
+    void createRoom_and_listRooms() throws Exception {
         RoomDto request = new RoomDto(null, "Test Room");
-        ResponseEntity<RoomDto> resp = restTemplate.postForEntity(baseUrl(), request, RoomDto.class);
-        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        RoomDto created = resp.getBody();
-        assertThat(created).isNotNull();
-        assertThat(created.getRoomId()).isNotNull();
-        assertThat(created.getRoomName()).isEqualTo("Test Room");
 
-        ResponseEntity<RoomDto[]> listResp = restTemplate.getForEntity(baseUrl(), RoomDto[].class);
-        assertThat(listResp.getStatusCode()).isEqualTo(HttpStatus.OK);
-        RoomDto[] rooms = listResp.getBody();
-        assertThat(rooms).isNotEmpty();
+        mockMvc.perform(post("/rooms")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.roomId").exists())
+                .andExpect(jsonPath("$.roomName").value("Test Room"));
+
+        mockMvc.perform(get("/rooms"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))));
     }
 
     @Test
-    void addProduct_and_listProducts() {
+    void addProduct_and_listProducts() throws Exception {
         // create room
         RoomDto request = new RoomDto(null, "Product Room");
-        ResponseEntity<RoomDto> resp = restTemplate.postForEntity(baseUrl(), request, RoomDto.class);
-        Long roomId = resp.getBody().getRoomId();
+        String createResp = mockMvc.perform(post("/rooms")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        RoomDto created = objectMapper.readValue(createResp, RoomDto.class);
+        Long roomId = created.getRoomId();
 
         // add product
         RoomProductDto prodReq = new RoomProductDto(null, null, "Milk", new BigDecimal("2.50"), false);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<RoomProductDto> entity = new HttpEntity<>(prodReq, headers);
-        ResponseEntity<RoomProductDto> prodResp = restTemplate.postForEntity(baseUrl() + "/" + roomId + "/products", entity, RoomProductDto.class);
-        assertThat(prodResp.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        RoomProductDto created = prodResp.getBody();
-        assertThat(created).isNotNull();
-        assertThat(created.getProductId()).isNotNull();
-        assertThat(created.getProductName()).isEqualTo("Milk");
+        mockMvc.perform(post("/rooms/" + roomId + "/products")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(prodReq)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.productId").exists())
+                .andExpect(jsonPath("$.productName").value("Milk"));
 
-        // list products
-        ResponseEntity<RoomProductDto[]> listResp = restTemplate.getForEntity(baseUrl() + "/" + roomId + "/products", RoomProductDto[].class);
-        assertThat(listResp.getStatusCode()).isEqualTo(HttpStatus.OK);
-        RoomProductDto[] products = listResp.getBody();
-        assertThat(products).isNotEmpty();
+        mockMvc.perform(get("/rooms/" + roomId + "/products"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))));
+    }
+
+    @Test
+    void createRoom_listRooms_andAddProduct_overHttp() throws Exception {
+        String roomName = "integ-room-" + System.currentTimeMillis();
+        RoomDto req = new RoomDto(null, roomName);
+
+        String createResp = mockMvc.perform(post("/rooms")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        RoomDto created = objectMapper.readValue(createResp, RoomDto.class);
+        Long roomId = created.getRoomId();
+
+        mockMvc.perform(get("/rooms"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))));
+
+        RoomProductDto pReq = new RoomProductDto(null, null, "Bread", BigDecimal.valueOf(3.5), false);
+        mockMvc.perform(post("/rooms/" + roomId + "/products")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(pReq)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.productId").exists());
+
+        mockMvc.perform(get("/rooms/" + roomId + "/products"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))));
     }
 }
