@@ -1,5 +1,6 @@
 package pl.allegro.agh.budgetManagement.budget.security;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -15,8 +16,18 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain filterChain(
             HttpSecurity http,
-            JwtAuthenticationFilter jwtFilter
+            JwtAuthenticationFilter jwtFilter,
+            @Value("${app.security.enabled:true}") boolean securityEnabled
     ) throws Exception {
+
+        if (!securityEnabled) {
+            return http
+                    .csrf(AbstractHttpConfigurer::disable)
+                    .authorizeHttpRequests(auth -> auth
+                            .anyRequest().permitAll()
+                    )
+                    .build();
+        }
 
         return http
                 .csrf(AbstractHttpConfigurer::disable)
