@@ -37,6 +37,7 @@ public class UserService {
         if (req.getRoles() != null && !req.getRoles().isEmpty()) {
             user.setRoles(req.getRoles());
         }
+        //user.setRoles(Set.of(Role.ROLE_USER));
 
         User saved = userRepository.save(user);
         String token = jwtUtil.generateToken(saved);
