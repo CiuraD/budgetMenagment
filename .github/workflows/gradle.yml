@@ -44,7 +44,15 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Build and run tests
-        run: ./gradlew build --no-daemon
+        run: |
+          ./gradlew build --no-daemon \
+            -Dspring.datasource.url="jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1" \
+            -Dspring.datasource.driver-class-name=org.h2.Driver \
+            -Dspring.datasource.username=sa \
+            -Dspring.datasource.password= \
+            -Dspring.flyway.enabled=false \
+            -Dspring.jpa.hibernate.ddl-auto=create-drop \
+            -Dapp.security.enabled=false
 
       - name: Upload test reports
         if: always()
