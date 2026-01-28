@@ -1,49 +1,64 @@
 name: Java CI with Gradle
 
+# restore the permissions the runner/CLI previously used
+permissions:
+  contents: read
+  packages: write
+  issues: write
+
 on:
-  push:
-    branches:
-      - "**"
-  pull_request:
-    branches:
-      - "**"
+  push: {}
+  pull_request: {}
+  workflow_dispatch: {}
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: read
-
     steps:
-    - name: Checkout source
-      uses: actions/checkout@v4
+      - name: Checkout source
+        uses: actions/checkout@v4
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
 
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v4
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.6'
 
-    - name: Run tests
-      run: ./gradlew test
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle
 
-    - name: Build application
-      run: ./gradlew build
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
 
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: java-artifacts
-        path: build/libs/*.jar
+      - name: Build and run tests
+        run: |
+          ./gradlew build --no-daemon \
+            -Dspring.datasource.url="jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1" \
+            -Dspring.datasource.driver-class-name=org.h2.Driver \
+            -Dspring.datasource.username=sa \
+            -Dspring.datasource.password= \
+            -Dspring.flyway.enabled=false \
+            -Dspring.jpa.hibernate.ddl-auto=create-drop \
+            -Dapp.security.enabled=false
 
-    - name: Publish Test Report
-      if: always()
-      uses: dorny/test-reporter@v1
-      with:
-        name: JUnit Tests
-        path: build/test-results/test/*.xml
-        reporter: java-junit
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            build/reports/tests/test
+            budget-service/build/reports/tests/test

@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://budgetmenagment-user-db-1:5432/userdb
+    username: user
+    password: userpass
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+server:
+  port: 8081
+
+jwt:
+  secret: change-this-secret-to-a-strong-random-value
+  expiration-ms: 86400000 # 1 day
