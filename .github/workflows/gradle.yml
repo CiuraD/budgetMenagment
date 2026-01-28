@@ -2,10 +2,15 @@ name: Java CI with Gradle
 
 on:
   push:
+    branches:
+      - '**'
   pull_request:
+    branches:
+      - '**'
 
 jobs:
-  build:
+  test:
+    name: Run tests
     runs-on: ubuntu-latest
 
     permissions:
@@ -25,31 +30,126 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Run tests
-        run: ./gradlew test
-
-      - name: Build application
-        run: ./gradlew build
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+      - name: Cache Gradle
+        uses: actions/cache@v4
         with:
-          name: java-artifacts
-          path: build/libs/*.jar
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle
 
-      - name: Check if test reports exist
-        id: test_reports
+      - name: Check for test sources
+        id: check_tests
         run: |
-          if ls build/test-results/test/*.xml 1> /dev/null 2>&1; then
-            echo "found=true" >> $GITHUB_OUTPUT
+          set -e
+          echo "Searching for test source files..."
+          if git ls-files | grep -E '(^|/)src/.*/test/.*\.(java|kt|groovy)$' >/dev/null 2>&1; then
+            echo "Found test sources"
+            echo "tests_present=true" >> $GITHUB_OUTPUT
           else
-            echo "found=false" >> $GITHUB_OUTPUT
+            echo "No test sources found"
+            echo "tests_present=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Publish Test Report
-        if: steps.test_reports.outputs.found == 'true'
+      # Start database containers only when tests are present and wait for health status
+      - name: Start DB services for tests
+        if: steps.check_tests.outputs.tests_present == 'true'
+        run: |
+          echo "Starting database services via Docker Compose"
+          docker compose -f compose.yaml up -d user-db budget-db
+          for svc in user-db budget-db; do
+            cid=$(docker compose -f compose.yaml ps -q "$svc")
+            echo "Waiting for $svc (container $cid) to become healthy..."
+            attempt=0
+            while [ $attempt -lt 60 ]; do
+              status=$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}no-healthcheck{{end}}' "$cid" 2>/dev/null || echo unknown)
+              echo "  status=$status"
+              if [ "$status" = "healthy" ] || [ "$status" = "no-healthcheck" ]; then
+                break
+              fi
+              attempt=$((attempt+1))
+              sleep 2
+            done
+            if [ $attempt -ge 60 ] && [ "$status" != "healthy" ] && [ "$status" != "no-healthcheck" ]; then
+              echo "Timed out waiting for $svc to become healthy"
+              docker compose -f compose.yaml logs --no-color $svc || true
+              exit 1
+            fi
+          done
+
+      - name: Run tests
+        if: steps.check_tests.outputs.tests_present == 'true'
+        run: ./gradlew test --no-daemon --console=plain
+
+      - name: Publish test report to Checks
+        if: steps.check_tests.outputs.tests_present == 'true'
         uses: dorny/test-reporter@v1
         with:
-          name: JUnit Tests
-          path: build/test-results/test/*.xml
-          reporter: java-junit
+          name: Gradle Tests
+          path: |
+            **/build/test-results/test/*.xml
+            **/build/test-results/**/*.xml
+          reporter: junit
+          fail-on-error: false
+
+      - name: Upload raw test-results artifact
+        if: steps.check_tests.outputs.tests_present == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            **/build/test-results/**
+
+      - name: Stop DB services
+        if: ${{ always() && steps.check_tests.outputs.tests_present == 'true' }}
+        run: |
+          echo "Stopping database services"
+          docker compose -f compose.yaml down --volumes
+
+  build:
+    name: Build and publish artifacts
+    needs: test
+    runs-on: ubuntu-latest
+    if: needs.test.result == 'success'
+
+    permissions:
+      contents: read
+      packages: write
+      issues: write
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle
+
+      - name: Build (skip tests)
+        run: ./gradlew build -x test --no-daemon --console=plain
+
+      - name: Upload implementation artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: implementation-artifacts
+          path: |
+            **/build/libs/*.jar
+            build/libs/*.jar
+            **/build/distributions/**
