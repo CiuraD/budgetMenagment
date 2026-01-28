@@ -11,6 +11,10 @@ spring:
   flyway:
     enabled: true
 
+  redis:
+    host: redis
+    port: 6379
+
 server:
   port: 8082
 

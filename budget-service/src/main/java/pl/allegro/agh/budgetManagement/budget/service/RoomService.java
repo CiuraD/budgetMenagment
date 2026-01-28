@@ -23,13 +23,16 @@ public class RoomService {
     private final RoomRepository roomRepository;
     private final RoomUserRepository roomUserRepository;
     private final RoomProductRepository roomProductRepository;
+    private final TransactionLogger transactionLogger;
 
     public RoomService(RoomRepository roomRepository,
                        RoomUserRepository roomUserRepository,
-                       RoomProductRepository roomProductRepository) {
+                       RoomProductRepository roomProductRepository,
+                       TransactionLogger transactionLogger) {
         this.roomRepository = roomRepository;
         this.roomUserRepository = roomUserRepository;
         this.roomProductRepository = roomProductRepository;
+        this.transactionLogger = transactionLogger;
     }
 
     @Transactional
@@ -37,7 +40,9 @@ public class RoomService {
         Room room = new Room();
         room.setRoomName(request.getRoomName());
         Room saved = roomRepository.save(room);
-        return new RoomDto(saved.getRoomId(), saved.getRoomName());
+        RoomDto dto = new RoomDto(saved.getRoomId(), saved.getRoomName());
+        transactionLogger.log("create_room", dto);
+        return dto;
     }
 
     public List<RoomDto> listRooms() {
@@ -55,7 +60,9 @@ public class RoomService {
         ru.setRoom(room);
         ru.setAdmin(request.isAdmin());
         RoomUser saved = roomUserRepository.save(ru);
-        return new RoomUserDto(saved.getUserId(), saved.getRoomId(), saved.isAdmin());
+        RoomUserDto dto = new RoomUserDto(saved.getUserId(), saved.getRoomId(), saved.isAdmin());
+        transactionLogger.log("add_user_to_room", dto);
+        return dto;
     }
 
     @Transactional
@@ -67,7 +74,9 @@ public class RoomService {
         p.setPrice(request.getPrice());
         p.setPaid(request.isPaid());
         RoomProduct saved = roomProductRepository.save(p);
-        return new RoomProductDto(saved.getProductId(), roomId, saved.getProductName(), saved.getPrice(), saved.isPaid());
+        RoomProductDto dto = new RoomProductDto(saved.getProductId(), roomId, saved.getProductName(), saved.getPrice(), saved.isPaid());
+        transactionLogger.log("add_product", dto);
+        return dto;
     }
 
     public List<RoomProductDto> listProducts(Long roomId) {
@@ -79,4 +88,3 @@ public class RoomService {
                 .collect(Collectors.toList());
     }
 }
-
