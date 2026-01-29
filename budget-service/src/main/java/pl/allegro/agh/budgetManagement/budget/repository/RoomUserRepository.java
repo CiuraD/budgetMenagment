@@ -7,6 +7,6 @@ import pl.allegro.agh.budgetManagement.budget.model.RoomUserId;
 import java.util.List;
 
 public interface RoomUserRepository extends JpaRepository<RoomUser, RoomUserId> {
-    List<RoomUser> findByRoomRoomId(Long roomId);
+    List<RoomUser> findRoomUserById_UserId(Long userId);
 }
 

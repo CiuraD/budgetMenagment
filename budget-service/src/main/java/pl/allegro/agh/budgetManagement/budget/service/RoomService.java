@@ -134,5 +134,15 @@ public class RoomService {
                 .map(RoomProduct::getPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
+
+    public List<RoomDto> getRoomsForUser(Long userId) {
+        List <RoomUser> ids = roomUserRepository.findRoomUserById_UserId(userId);
+        return ids.stream()
+                .map(id -> roomRepository.findById(id.getRoomId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Room not found with id " + id.getRoomId())) )
+                .map(r -> new RoomDto(r.getRoomId(), r.getRoomName())
+                )
+                .collect(Collectors.toList());
+    }
 }
 

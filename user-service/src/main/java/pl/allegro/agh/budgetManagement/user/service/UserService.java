@@ -4,12 +4,15 @@ import org.springframework.stereotype.Service;
 import pl.allegro.agh.budgetManagement.user.dto.AuthResponse;
 import pl.allegro.agh.budgetManagement.user.dto.LoginRequest;
 import pl.allegro.agh.budgetManagement.user.dto.RegistrationRequest;
+import pl.allegro.agh.budgetManagement.user.dto.UserDto;
 import pl.allegro.agh.budgetManagement.user.model.PasswordUtil;
 import pl.allegro.agh.budgetManagement.user.model.User;
 import pl.allegro.agh.budgetManagement.user.repository.UserRepository;
 import pl.allegro.agh.budgetManagement.user.security.JwtUtil;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -53,6 +56,14 @@ public class UserService {
             return Optional.of(new AuthResponse(user, token));
         }
         return Optional.empty();
+    }
+
+    public List<UserDto> getAllUsers() {
+        return userRepository.findAllByOrderByUsernameAsc().stream()
+                .map((user ->
+                        new UserDto(user.getId(), user.getUsername(), user.getEmail(), user.getNickname(), null))
+                )
+                .collect(Collectors.toList());
     }
 }
 

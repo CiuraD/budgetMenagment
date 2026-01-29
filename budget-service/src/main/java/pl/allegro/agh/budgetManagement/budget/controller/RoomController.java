@@ -85,4 +85,10 @@ public class RoomController {
         RoomProductDto dto = roomService.getProductById(roomId, productId);
         return ResponseEntity.ok(dto);
     }
+
+    @Operation(summary = "Get all rooms a user belongs to")
+    @GetMapping("/users/{userId}")
+    public List<RoomDto> getRoomsByUserId(@PathVariable Long userId) {
+        return roomService.getRoomsForUser(userId);
+    }
 }
