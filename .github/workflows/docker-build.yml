@@ -15,6 +15,8 @@ jobs:
         uses: snyk/actions/gradle-9-jdk21@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --all-sub-projects
   build-images:
     runs-on: ubuntu-latest
     steps:
