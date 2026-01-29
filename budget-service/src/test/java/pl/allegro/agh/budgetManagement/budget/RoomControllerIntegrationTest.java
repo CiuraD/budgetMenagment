@@ -16,8 +16,7 @@ import pl.allegro.agh.budgetManagement.budget.dto.RoomProductDto;
 import java.math.BigDecimal;
 
 import static org.hamcrest.Matchers.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -52,7 +51,7 @@ public class RoomControllerIntegrationTest {
 
         mockMvc.perform(post("/rooms")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                        .content(objectMapper.writeValueAsString(request.getRoomName())))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.roomId").exists())
                 .andExpect(jsonPath("$.roomName").value("Test Room"));
@@ -117,5 +116,46 @@ public class RoomControllerIntegrationTest {
         mockMvc.perform(get("/rooms/" + roomId + "/products"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))));
+    }
+
+    @Test
+    void createRoom_andAddProducts_thenGetTotalUnpaidAmount() throws Exception {
+        String roomName = "total-unpaid-room-" + System.currentTimeMillis();
+        RoomDto req = new RoomDto(null, roomName);
+
+        String createResp = mockMvc.perform(post("/rooms")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        RoomDto created = objectMapper.readValue(createResp, RoomDto.class);
+        Long roomId = created.getRoomId();
+
+        RoomProductDto p1 = new RoomProductDto(null, null, "Item1", BigDecimal.valueOf(10.0), false);
+        RoomProductDto p2 = new RoomProductDto(null, null, "Item2", BigDecimal.valueOf(15.5), false);
+        RoomProductDto p3 = new RoomProductDto(null, null, "Item3", BigDecimal.valueOf(100), false);
+
+        mockMvc.perform(post("/rooms/" + roomId + "/products")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(p1)))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post("/rooms/" + roomId + "/products")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(p2)))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post("/rooms/" + roomId + "/products")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(p3)))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(patch("/rooms/" + roomId + "/products/3/pay"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/rooms/" + roomId + "/products/unpaid"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(25.5));
     }
 }
