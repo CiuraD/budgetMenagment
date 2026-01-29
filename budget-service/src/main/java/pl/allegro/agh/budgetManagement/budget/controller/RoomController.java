@@ -29,7 +29,7 @@ public class RoomController {
     @PostMapping
     public ResponseEntity<RoomDto> createRoom(@Valid @RequestBody RoomDto dto) {
         RoomDto realDto = roomService.createRoom(dto.getRoomName());
-        return ResponseEntity.created(URI.create("/rooms/" + realDto.getRoomId())).body(dto);
+        return ResponseEntity.created(URI.create("/rooms/" + realDto.getRoomId())).body(realDto);
     }
 
     @Operation(summary = "List rooms")

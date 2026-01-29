@@ -17,6 +17,7 @@ import java.math.BigDecimal;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -146,12 +147,16 @@ public class RoomControllerIntegrationTest {
                         .content(objectMapper.writeValueAsString(p2)))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(post("/rooms/" + roomId + "/products")
+        String p3Resp = mockMvc.perform(post("/rooms/" + roomId + "/products")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(p3)))
-                .andExpect(status().isCreated());
+                        .andExpect(status().isCreated())
+                        .andReturn().getResponse().getContentAsString();
 
-        mockMvc.perform(patch("/rooms/" + roomId + "/products/"+ p3.getProductId() +"/pay"))
+        RoomProductDto createdP3 = objectMapper.readValue(p3Resp, RoomProductDto.class);
+        Long p3Id = createdP3.getProductId();
+
+        mockMvc.perform(patch("/rooms/" + roomId + "/products/"+ p3Id +"/pay"))
                 .andExpect(status().isOk());
 
         mockMvc.perform(get("/rooms/" + roomId + "/products/unpaid"))
