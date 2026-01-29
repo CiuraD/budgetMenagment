@@ -27,9 +27,9 @@ public class RoomController {
 
     @Operation(summary = "Create a room")
     @PostMapping
-    public ResponseEntity<RoomDto> createRoom(@Valid @RequestBody String roomName) {
-        RoomDto dto = roomService.createRoom(roomName);
-        return ResponseEntity.created(URI.create("/rooms/" + dto.getRoomId())).body(dto);
+    public ResponseEntity<RoomDto> createRoom(@Valid @RequestBody RoomDto dto) {
+        RoomDto realDto = roomService.createRoom(dto.getRoomName());
+        return ResponseEntity.created(URI.create("/rooms/" + realDto.getRoomId())).body(dto);
     }
 
     @Operation(summary = "List rooms")

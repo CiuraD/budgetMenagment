@@ -51,7 +51,7 @@ public class RoomControllerIntegrationTest {
 
         mockMvc.perform(post("/rooms")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request.getRoomName())))
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.roomId").exists())
                 .andExpect(jsonPath("$.roomName").value("Test Room"));
@@ -151,7 +151,7 @@ public class RoomControllerIntegrationTest {
                         .content(objectMapper.writeValueAsString(p3)))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(patch("/rooms/" + roomId + "/products/3/pay"))
+        mockMvc.perform(patch("/rooms/" + roomId + "/products/"+ p3.getProductId() +"/pay"))
                 .andExpect(status().isOk());
 
         mockMvc.perform(get("/rooms/" + roomId + "/products/unpaid"))
