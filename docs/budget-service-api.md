@@ -5,8 +5,6 @@ OpenAPI documentation for the Budget Service
 Base servers:
 - http://localhost:8082
 
-[Overview and examples](./API_DOCS.md)
-
 ## GET /rooms
 - Summary: List rooms
 - Responses:
@@ -16,7 +14,8 @@ Base servers:
 ## POST /rooms
 - Summary: Create a room
 - Request body:
-  - application/json: $ref: #/components/schemas/RoomDto
+  - application/json:
+$ref: #/components/schemas/RoomDto
 - Responses:
   - 200: OK
     - */*: $ref: #/components/schemas/RoomDto
@@ -26,7 +25,8 @@ Base servers:
 - Parameters:
   - roomId (in: path) required: True schema: {'type': 'integer', 'format': 'int64'}
 - Request body:
-  - application/json: $ref: #/components/schemas/RoomUserDto
+  - application/json:
+$ref: #/components/schemas/RoomUserDto
 - Responses:
   - 200: OK
     - */*: $ref: #/components/schemas/RoomUserDto
@@ -44,7 +44,8 @@ Base servers:
 - Parameters:
   - roomId (in: path) required: True schema: {'type': 'integer', 'format': 'int64'}
 - Request body:
-  - application/json: $ref: #/components/schemas/RoomProductDto
+  - application/json:
+$ref: #/components/schemas/RoomProductDto
 - Responses:
   - 200: OK
     - */*: $ref: #/components/schemas/RoomProductDto
@@ -61,11 +62,42 @@ Base servers:
   - 200: OK
     - */*: {'type': 'string'}
 
+## PATCH /rooms/{roomId}/products/{productId}/pay
+- Summary: Mark product as paid
+- Parameters:
+  - roomId (in: path) required: True schema: {'type': 'integer', 'format': 'int64'}
+  - productId (in: path) required: True schema: {'type': 'integer', 'format': 'int64'}
+- Responses:
+  - 200: OK
+    - */*: $ref: #/components/schemas/RoomProductDto
+
+## GET /rooms/{roomId}/products/{productId}
+- Summary: Get a product by ID in a room
+- Parameters:
+  - roomId (in: path) required: True schema: {'type': 'integer', 'format': 'int64'}
+  - productId (in: path) required: True schema: {'type': 'integer', 'format': 'int64'}
+- Responses:
+  - 200: OK
+    - */*: $ref: #/components/schemas/RoomProductDto
+
+## GET /rooms/{roomId}/products/unpaid
+- Summary: Get total unpaid amount in a room
+- Parameters:
+  - roomId (in: path) required: True schema: {'type': 'integer', 'format': 'int64'}
+- Responses:
+  - 200: OK
+    - */*: {'type': 'number'}
+
+## GET /rooms/users/{userId}
+- Summary: Get all rooms a user belongs to
+- Parameters:
+  - userId (in: path) required: True schema: {'type': 'integer', 'format': 'int64'}
+- Responses:
+  - 200: OK
+    - */*: array of $ref: #/components/schemas/RoomDto
+
 ## GET /budgets/hello
 - Summary: hello
 - Responses:
   - 200: OK
     - */*: {'type': 'string'}
-
-
-[Back to API overview](./API_DOCS.md)

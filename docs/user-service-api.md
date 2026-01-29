@@ -5,12 +5,11 @@ OpenAPI documentation for the User Service
 Base servers:
 - http://localhost:8081
 
-[Overview and examples](./API_DOCS.md)
-
 ## POST /auth/register
 - Summary: register
 - Request body:
-  - application/json: $ref: #/components/schemas/RegistrationRequest
+  - application/json:
+$ref: #/components/schemas/RegistrationRequest
 - Responses:
   - 200: OK
     - */*: $ref: #/components/schemas/AuthResponse
@@ -18,7 +17,8 @@ Base servers:
 ## POST /auth/login
 - Summary: login
 - Request body:
-  - application/json: $ref: #/components/schemas/LoginRequest
+  - application/json:
+$ref: #/components/schemas/LoginRequest
 - Responses:
   - 200: OK
     - */*: $ref: #/components/schemas/AuthResponse
@@ -35,5 +35,8 @@ Base servers:
   - 200: OK
     - */*: {'type': 'object'}
 
-
-[Back to API overview](./API_DOCS.md)
+## GET /admin/users
+- Summary: getAllUsers
+- Responses:
+  - 200: OK
+    - */*: array of $ref: #/components/schemas/UserDto

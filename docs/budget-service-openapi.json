@@ -225,6 +225,155 @@
         }
       }
     },
+    "/rooms/{roomId}/products/{productId}/pay": {
+      "patch": {
+        "tags": [
+          "room-controller"
+        ],
+        "summary": "Mark product as paid",
+        "operationId": "markProductAsPaid",
+        "parameters": [
+          {
+            "name": "roomId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomProductDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rooms/{roomId}/products/{productId}": {
+      "get": {
+        "tags": [
+          "room-controller"
+        ],
+        "summary": "Get a product by ID in a room",
+        "operationId": "getProductById",
+        "parameters": [
+          {
+            "name": "roomId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomProductDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rooms/{roomId}/products/unpaid": {
+      "get": {
+        "tags": [
+          "room-controller"
+        ],
+        "summary": "Get total unpaid amount in a room",
+        "operationId": "getTotalUnpaidAmount",
+        "parameters": [
+          {
+            "name": "roomId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rooms/users/{userId}": {
+      "get": {
+        "tags": [
+          "room-controller"
+        ],
+        "summary": "Get all rooms a user belongs to",
+        "operationId": "getRoomsByUserId",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RoomDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/budgets/hello": {
       "get": {
         "tags": [
@@ -302,9 +451,6 @@
             "type": "number"
           },
           "paid": {
-            "type": "boolean"
-          },
-          "isPaid": {
             "type": "boolean"
           }
         },
