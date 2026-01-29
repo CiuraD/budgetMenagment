@@ -2,11 +2,19 @@ name: CI - Dockerfile build
 
 on:
   push:
-    branches: [ models, main ]
+    branches: [ models, master ]
   pull_request:
-    branches: [ models, main ]
+    branches: [ models, master ]
 
 jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/gradle-9-jdk21@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
   build-images:
     runs-on: ubuntu-latest
     steps:
