@@ -10,6 +10,7 @@ import pl.allegro.agh.budgetManagement.budget.service.RoomService;
 import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.Operation;
 
+import java.math.BigDecimal;
 import java.net.URI;
 import java.util.List;
 
@@ -26,8 +27,8 @@ public class RoomController {
 
     @Operation(summary = "Create a room")
     @PostMapping
-    public ResponseEntity<RoomDto> createRoom(@Valid @RequestBody RoomDto request) {
-        RoomDto dto = roomService.createRoom(request);
+    public ResponseEntity<RoomDto> createRoom(@Valid @RequestBody String roomName) {
+        RoomDto dto = roomService.createRoom(roomName);
         return ResponseEntity.created(URI.create("/rooms/" + dto.getRoomId())).body(dto);
     }
 
@@ -55,5 +56,25 @@ public class RoomController {
     @GetMapping("/{roomId}/products")
     public List<RoomProductDto> listProducts(@PathVariable Long roomId) {
         return roomService.listProducts(roomId);
+    }
+
+    @Operation(summary = "Get total unpaid amount in a room")
+    @GetMapping("/{roomId}/products/unpaid")
+    public BigDecimal getTotalUnpaidAmount(@PathVariable Long roomId) {
+        return roomService.getUnpaidRoomTotal(roomId);
+    }
+
+    @Operation(summary = "Mark product as paid")
+    @PatchMapping("/{roomId}/products/{productId}/pay")
+    public ResponseEntity<RoomProductDto> markProductAsPaid(@PathVariable Long roomId, @PathVariable Long productId) {
+        RoomProductDto dto = roomService.markProductAsPaid(roomId, productId);
+        return ResponseEntity.ok(dto);
+    }
+
+    @Operation(summary = "Get a product by ID in a room")
+    @GetMapping("/{roomId}/products/{productId}")
+    public ResponseEntity<RoomProductDto> getProductById(@PathVariable Long roomId, @PathVariable Long productId) {
+        RoomProductDto dto = roomService.getProductById(roomId, productId);
+        return ResponseEntity.ok(dto);
     }
 }

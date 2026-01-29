@@ -16,7 +16,7 @@ public class RoomProductDto {
     @NotNull
     @PositiveOrZero
     private BigDecimal price;
-    @JsonProperty("isPaid")
+    @JsonProperty("paid")
     private boolean isPaid;
 
     public RoomProductDto() {

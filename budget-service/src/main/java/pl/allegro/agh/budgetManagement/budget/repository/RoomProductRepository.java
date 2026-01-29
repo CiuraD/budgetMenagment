@@ -7,5 +7,8 @@ import java.util.List;
 
 public interface RoomProductRepository extends JpaRepository<RoomProduct, Long> {
     List<RoomProduct> findByRoomRoomId(Long roomId);
+    List<RoomProduct> findByRoomRoomIdAndIsPaidFalse(Long roomId);
+    List<RoomProduct> findByRoomRoomIdAndIsPaidTrue(Long roomId);
+    RoomProduct findByProductIdAndRoomRoomId(Long productId, Long roomId);
 }
 

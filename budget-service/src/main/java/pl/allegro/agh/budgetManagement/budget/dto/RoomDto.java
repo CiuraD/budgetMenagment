@@ -1,8 +1,13 @@
 package pl.allegro.agh.budgetManagement.budget.dto;
 
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import jakarta.validation.constraints.NotBlank;
 
 public class RoomDto {
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long roomId;
 
     @NotBlank

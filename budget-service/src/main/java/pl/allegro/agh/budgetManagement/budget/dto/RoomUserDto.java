@@ -1,11 +1,13 @@
 package pl.allegro.agh.budgetManagement.budget.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotNull;
 
 public class RoomUserDto {
     @NotNull
     private Long userId;
     private Long roomId;
+    @JsonProperty("admin")
     private boolean isAdmin;
 
     public RoomUserDto() {

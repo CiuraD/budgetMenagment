@@ -49,7 +49,7 @@ class RoomServiceTest {
 
         when(roomRepository.save(any(Room.class))).thenReturn(saved);
 
-        RoomDto resp = roomService.createRoom(req);
+        RoomDto resp = roomService.createRoom(req.getRoomName());
 
         assertNotNull(resp);
         assertEquals(1L, resp.getRoomId());
